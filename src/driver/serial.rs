@@ -30,7 +30,6 @@ impl<P: SerialPort> Communication for Serial<P> {
     type Error = serialport::Error;
     fn next_line(&mut self) -> Result<String, Self::Error> {
         let mut buf = String::new();
-        self.port.read_line(&mut buf)?;
-        Ok(buf)
+        self.port.read_line(&mut buf)
     }
 }

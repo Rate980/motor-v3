@@ -1,5 +1,5 @@
-use crate::driver::Angle as AngleI;
-use crate::driver::Distance as DistanceI;
+use crate::controller::Angle as AngleI;
+use crate::controller::Distance as DistanceI;
 
 pub struct Angle;
 
