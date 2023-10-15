@@ -1,0 +1,39 @@
+
+use std::{
+    io::{BufRead, BufReader, Read},
+    sync::mpsc::{channel, Receiver},
+    thread,
+};
+
+use bytes::buf;
+use serialport::SerialPort;
+
+pub struct Serial {
+    channel: Receiver<String>,
+}
+
+impl Serial {
+    pub fn new(port: Box<dyn SerialPort>) -> serialport::Result<Self> {
+        let baud_rate = port.baud_rate()?;
+        Self::with_baud_rate(port, baud_rate)
+    }
+
+    pub fn with_baud_rate(
+        mut port: Box<dyn SerialPort>,
+        baud_rate: u32,
+    ) -> serialport::Result<Self> {
+        port.set_baud_rate(baud_rate)?;
+        let (tx, rx) = channel::<String>();
+        thread::spawn(move || {
+            let mut port_buffer = BufReader::new(port);
+            loop {
+                let mut buf = String::new();
+                match port_buffer.read_line(&mut buf){
+                    Ok(_) => todo!(),
+                    Err(_) => todo!(),
+                }
+            }
+        });
+        Ok(Self { channel: rx })
+    }
+}

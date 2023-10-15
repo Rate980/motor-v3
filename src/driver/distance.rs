@@ -1,3 +1,3 @@
 pub trait Distance {
-    fn get_distance() -> u32;
+    fn get_distance(&mut self) -> f64;
 }

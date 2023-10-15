@@ -1,10 +1,8 @@
 use std::thread::sleep;
 use std::time::Duration;
 
-use embedded_hal::PwmPin;
 use motor_v3::driver::{Motor, TB6569};
 use rppal::gpio::Gpio;
-use rppal::pwm::{Channel, Polarity, Pwm};
 
 fn main() {
     let gpio = Gpio::new().unwrap();

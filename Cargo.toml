@@ -12,6 +12,7 @@ embedded-hal = "0.2.7"
 futures = "0.3.28"
 futures-sink = "0.3.28"
 rppal = { version = "0.14.1", features = ["hal"] }
+serialport = "4.2.2"
 thiserror = "1.0.49"
 tokio = { version = "1.33.0", features = ["full"] }
 tokio-serial = { version = "5.4.4", features = ["codec"] }
