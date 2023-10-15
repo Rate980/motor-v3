@@ -1,3 +1,4 @@
 pub trait Distance {
-    fn get_distance(&mut self) -> f64;
+    type Error;
+    fn get_distance(&mut self) -> Result<f64, Self::Error>;
 }

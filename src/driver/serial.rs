@@ -1,13 +1,6 @@
-use std::{
-    io::{BufRead, BufReader, Read},
-    sync::mpsc::{channel, Receiver},
-    thread,
-};
+use std::io::BufReader;
 
-use bytes::buf;
 use serialport::SerialPort;
-
-use super::Communication;
 
 pub struct Serial<P: SerialPort> {
     port: BufReader<P>,
@@ -26,10 +19,10 @@ impl<P: SerialPort> Serial<P> {
     }
 }
 
-impl<P: SerialPort> Communication for Serial<P> {
-    type Error = serialport::Error;
-    fn next_line(&mut self) -> Result<String, Self::Error> {
-        let mut buf = String::new();
-        self.port.read_line(&mut buf)
-    }
-}
+// impl<P: SerialPort> Communication for Serial<P> {
+//     type Error = serialport::Error;
+//     fn read_line(&mut self) -> Result<String, Self::Error> {
+//         let mut buf = String::new();
+//         self.port.read_line(&mut buf)
+//     }
+// }

@@ -1,3 +1,5 @@
+use std::convert::Infallible;
+
 use crate::controller::Angle as AngleI;
 use crate::controller::Distance as DistanceI;
 
@@ -36,7 +38,8 @@ impl Distance {
 }
 
 impl DistanceI for Distance {
-    fn get_distance(&mut self) -> f64 {
-        0.0
+    type Error = Infallible;
+    fn get_distance(&mut self) -> Result<f64, Self::Error> {
+        Ok(0.0)
     }
 }
