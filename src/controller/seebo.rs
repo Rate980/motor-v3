@@ -20,7 +20,9 @@ pub struct Seebo<M: Motor> {
 }
 
 impl<M: Motor> Seebo<M> {
-    pub fn new(motor1: M, motor2: M, speed: f64) -> Self {
+    pub fn new(mut motor1: M, mut motor2: M, speed: f64) -> Self {
+        motor1.set_speed(speed);
+        motor2.set_speed(speed);
         Self {
             motor1,
             motor2,
@@ -32,6 +34,20 @@ impl<M: Motor> Seebo<M> {
 
 impl<M: Motor> Machine for Seebo<M> {
     type Error = Error<M>;
+
+    // fn backward(&mut self) -> Result<(), Self::Error> {
+    //     self.motor1.backward().map_err(Self::Error::Motor)?;
+    //     self.motor2.backward().map_err(Self::Error::Motor)?;
+    //     self.set_speed(self.speed)?;
+    //     Ok(())
+    // }
+
+    // fn forward(&mut self) -> Result<(), Self::Error> {
+    //     self.motor1.forward().map_err(Self::Error::Motor)?;
+    //     self.motor2.forward().map_err(Self::Error::Motor)?;
+    //     self.set_speed(self.speed)?;
+    //     Ok(())
+    // }
 
     fn stop(&mut self) -> Result<(), Self::Error> {
         self.motor1.stop().map_err(Self::Error::Motor)?;
@@ -61,7 +77,8 @@ impl<M: Motor> Machine for Seebo<M> {
         Ok(())
     }
 
-    fn turn(&mut self, right: f64, left: f64) -> Result<(), Self::Error> {
+    fn turn(&mut self, mut right: f64, left: f64) -> Result<(), Self::Error> {
+        right *= -1.0;
         self.speed_diff = (right, left);
         if right.abs() > M::MAX_SPEED || left.abs() > M::MAX_SPEED {
             return Err(Self::Error::InvalidValue);

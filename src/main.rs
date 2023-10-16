@@ -29,7 +29,7 @@ const BLE_ESP_PATH: &str = "/dev/pts/1";
 const BLE_ESP_BAUD_RATE: u32 = 9600;
 
 #[cfg(not(feature = "stub"))]
-const INFRARED_ESP_PATH: &str = "/dev/ttyUSB1";
+const INFRARED_ESP_PATH: &str = "/dev/ttyUSB2";
 #[cfg(feature = "stub")]
 const BLE_ESP_PATH: &str = "/dev/pts/3";
 const INFRARED_ESP_BAUD_RATE: u32 = 115200;
@@ -115,6 +115,7 @@ fn main() {
                     Err(_) => continue,
                 }
             }
+            thread::sleep(std::time::Duration::from_micros(10));
         });
     }
 
@@ -138,6 +139,10 @@ fn main() {
                 continue;
             }
 
+            if !inp.starts_with('6') {
+                continue;
+            }
+
             {
                 let tmp = inp
                     .split_whitespace()
@@ -152,51 +157,93 @@ fn main() {
                     });
                 }
             }
+            thread::sleep(std::time::Duration::from_micros(10));
         });
     }
 
-    loop {
-        let angle = *angle_value.lock().unwrap();
-        let distances = distances
-            .iter()
-            .map(|x| *x.lock().unwrap())
-            .collect::<Vec<_>>();
-        if let Ok(message) = ble_rx.try_recv() {
-            println!("message: {}", message)
-        }
-        println!("angle: {:b}\n distance: {:?}", angle, distances);
-        println!("----------------------");
-    }
+    let mut is_stop = true;
 
-    // 'i: loop {
+    // let handle = thread::spawn(move || loop {
     //     {
-    //         for distance in distances.iter() {
-    //             let distance = distance.lock().unwrap();
-    //             if *distance <= STOP_DISTANCE {
-    //                 seebo.short_brake().unwrap();
-    //                 continue 'i;
-    //             }
+    //         {
+    //             let angle = *angle_value.lock().unwrap();
+    //             let distances = distances
+    //                 .iter()
+    //                 .map(|x| *x.lock().unwrap())
+    //                 .collect::<Vec<_>>();
+    //             // if let Ok(message) = ble_rx.try_recv() {
+    //             //     println!("message: {}", message)
+    //             // }
+    //             // println!("angle: {:b}\n distance: {:?}", angle, distances);
+    //             // println!("----------------------");
+    //             print!("\r{:0>8b}", angle);
     //         }
+    //         thread::sleep(std::time::Duration::from_millis(1));
     //     }
+    // });
 
-    //     let angle = *angle_value.lock().unwrap();
+    let handle = thread::spawn(move || 'i: loop {
+        if let Ok(message) = ble_rx.try_recv() {
+            match message {
+                3 => {
+                    println!("start");
+                    is_stop = false;
+                }
+                4 => {
+                    println!("stop");
+                    is_stop = true;
+                }
+                _ => (),
+            }
+        }
+        if is_stop {
+            seebo.short_brake().unwrap();
+            continue 'i;
+        }
 
-    //     match angle {
-    //         0b0000_1000 => seebo.forward().unwrap(),
-    //         0b0100_0000 | 0b0110_0000 => {
-    //             seebo.turn(-1.0, 1.0).unwrap();
-    //             seebo.set_speed(0.5).unwrap()
-    //         }
-    //         0b0001_1000 => {
-    //             seebo.turn(1.0, -1.0).unwrap();
-    //             seebo.set_speed(0.5).unwrap()
-    //         }
-    //         0b0000_0001 => {
-    //             seebo.turn(1.0, -1.0).unwrap();
-    //             seebo.set_speed(0.5).unwrap()
-    //         }
+        {
+            for distance in distances.iter() {
+                let distance = distance.lock().unwrap();
+                if *distance <= STOP_DISTANCE {
+                    seebo.short_brake().unwrap();
+                    continue 'i;
+                }
+            }
+        }
+        {
+            let angle = *angle_value.lock().unwrap();
+            // println!("angle: {:b}", angle);
 
-    //         _ => (),
-    //     }
-    // }
+            match angle {
+                0b000_1000 | 0b001_1100 | 0b001_1000 | 0b000_1100 => {
+                    // println!("forward");
+                    seebo.forward().unwrap();
+                    seebo.set_speed(1.0).unwrap();
+                }
+                0b000_0010 | 0b000_0110 | 0b000_1110 => {
+                    // println!("right");
+                    seebo.turn(0.0, 1.0).unwrap();
+                    seebo.set_speed(0.5).unwrap();
+                }
+                0b010_0000 | 0b011_0000 | 0b011_1000 => {
+                    // println!("left");
+                    seebo.turn(1.0, 0.0).unwrap();
+                    seebo.set_speed(0.5).unwrap();
+                }
+                0b000_0001 => {
+                    // println!("right");
+                    seebo.turn(-1.0, 1.0).unwrap();
+                    seebo.set_speed(0.5).unwrap();
+                }
+                0b100_0000 => {
+                    // println!("left");
+                    seebo.turn(1.0, -1.0).unwrap();
+                    seebo.set_speed(0.5).unwrap();
+                }
+                _ => (),
+            }
+        }
+        thread::sleep(std::time::Duration::from_micros(10));
+    });
+    handle.join().unwrap();
 }
